@@ -1,0 +1,2000 @@
+
+<html lang="bn">
+<head>
+    <meta charset="UTF-8"></meta>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"></meta>
+    <title>PUBG স্টাইল বাটল রয়্যাল</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"></link>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background-color: #1a1a1a;
+        }
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #4a752c;
+            touch-action: none;
+        }
+        #gameUI {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        #healthBar {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 200px;
+            height: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+        }
+        #healthFill {
+            height: 100%;
+            width: 100%;
+            background-color: #ff0000;
+            border-radius: 10px;
+            transition: width 0.3s;
+        }
+        #armorBar {
+            position: absolute;
+            bottom: 45px;
+            left: 20px;
+            width: 200px;
+            height: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+        }
+        #armorFill {
+            height: 100%;
+            width: 0%;
+            background-color: #0095ff;
+            border-radius: 10px;
+            transition: width 0.3s;
+        }
+        #killCount {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.8);
+        }
+        #playerCount {
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.8);
+        }
+        #zoneTimer {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.8);
+        }
+        #minimap {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        #weapons {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        .weapon {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            border: 2px solid transparent;
+        }
+        .weapon.active {
+            border-color: #ffff00;
+        }
+        #joystick {
+            position: absolute;
+            bottom: 100px;
+            left: 100px;
+            width: 100px;
+            height: 100px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            pointer-events: auto;
+            display: none;
+        }
+        #joystickKnob {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50px;
+            height: 50px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        #fireButton {
+            position: absolute;
+            bottom: 150px;
+            right: 50px;
+            width: 80px;
+            height: 80px;
+            background-color: rgba(255, 0, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            display: none;
+        }
+        #reloadButton {
+            position: absolute;
+            bottom: 80px;
+            right: 150px;
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 255, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            display: none;
+        }
+        #ammoCount {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.8);
+        }
+        #startScreen, #gameOverScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        #gameOverScreen {
+            display: none;
+        }
+        .gameButton {
+            background-color: #ff6600;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            pointer-events: auto;
+        }
+        .gameTitle {
+            color: white;
+            font-size: 36px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        #highScores {
+            color: white;
+            font-size: 18px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        #notification {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 24px;
+            display: none;
+        }
+        .itemPickup {
+            position: absolute;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        #damageIndicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            border: 0px solid rgba(255, 0, 0, 0.5);
+            display: none;
+        }
+        @media (max-width: 768px) {
+            #healthBar, #armorBar {
+                width: 150px;
+            }
+            #minimap {
+                width: 100px;
+                height: 100px;
+            }
+            .weapon {
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="gameUI">
+        <div id="healthBar"><div id="healthFill"></div></div>
+        <div id="armorBar"><div id="armorFill"></div></div>
+        <div id="killCount">কিল: 0</div>
+        <div id="playerCount">বাকি: 20</div>
+        <div id="zoneTimer">জোন: 02:00</div>
+        <div id="minimap"></div>
+        <div id="weapons">
+            <div class="weapon active" data-weapon="fist">মুষ্টি</div>
+            <div class="weapon" data-weapon="pistol">পিস্তল</div>
+            <div class="weapon" data-weapon="rifle">রাইফেল</div>
+        </div>
+        <div id="ammoCount">গুলি: 0</div>
+        <div id="joystick"><div id="joystickKnob"></div></div>
+        <div id="fireButton">
+            <svg fill="white" height="40" viewbox="0 0 16 16" width="40" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h7a.5.5 0 0 0 0-1h-7z">
+            </path></svg>
+        </div>
+        <div id="reloadButton">R</div>
+        <div id="notification"></div>
+        <div id="damageIndicator"></div>
+    </div>
+
+    <div id="startScreen">
+        <h1 class="gameTitle">PUBG স্টাইল বাটল রয়্যাল</h1>
+        <button class="gameButton" id="startButton">গেম শুরু করুন</button>
+        <div id="highScores">
+            <h2>সর্বোচ্চ স্কোর</h2>
+            <div id="scoreList">কোন স্কোর নেই</div>
+        </div>
+        <div class="mt-4 text-white text-sm">
+            <p>কন্ট্রোল:</p>
+            <p>PC: WASD = চলাফেরা, মাউস = এইম, ক্লিক = গুলি, R = রিলোড, 1-3 = অস্ত্র পরিবর্তন</p>
+            <p>মোবাইল: বাম দিকে জয়স্টিক = চলাফেরা, ডান দিকে বাটন = গুলি</p>
+        </div>
+    </div>
+
+    <div id="gameOverScreen">
+        <h1 class="gameTitle">গেম শেষ!</h1>
+        <h2 class="text-white text-2xl mb-4" id="finalScore">আপনার স্কোর: 0</h2>
+        <button class="gameButton" id="restartButton">আবার খেলুন</button>
+    </div>
+
+    <script>
+        // Game variables
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let gameState = 'start'; // start, playing, gameover
+        let gameTime = 0;
+        
+        // Player variables
+        let player = {
+            x: 0,
+            y: 0,
+            width: 40,
+            height: 40,
+            speed: 4,
+            health: 100,
+            armor: 0,
+            kills: 0,
+            direction: 0, // in radians
+            weapon: 'fist', // fist, pistol, rifle
+            ammo: {
+                pistol: 0,
+                rifle: 0
+            },
+            currentAmmo: {
+                pistol: 0,
+                rifle: 0
+            },
+            reloading: false,
+            lastShot: 0
+        };
+        
+        // Weapon configs
+        const weapons = {
+            fist: {
+                damage: 10,
+                range: 50,
+                fireRate: 500, // ms between shots
+                reloadTime: 0,
+                ammoCapacity: 0,
+                spread: 0.2
+            },
+            pistol: {
+                damage: 25,
+                range: 200,
+                fireRate: 400,
+                reloadTime: 1500,
+                ammoCapacity: 10,
+                spread: 0.1
+            },
+            rifle: {
+                damage: 40,
+                range: 400,
+                fireRate: 150,
+                reloadTime: 2500,
+                ammoCapacity: 30,
+                spread: 0.05
+            }
+        };
+        
+        // Game world variables
+        const worldSize = 3000;
+        let viewportX = 0;
+        let viewportY = 0;
+        
+        // Camera follows player
+        function updateCamera() {
+            viewportX = player.x - canvas.width / 2;
+            viewportY = player.y - canvas.height / 2;
+            
+            // Clamp camera to world boundaries
+            viewportX = Math.max(0, Math.min(viewportX, worldSize - canvas.width));
+            viewportY = Math.max(0, Math.min(viewportY, worldSize - canvas.height));
+        }
+        
+        // Convert world coordinates to screen coordinates
+        function worldToScreen(x, y) {
+            return {
+                x: x - viewportX,
+                y: y - viewportY
+            };
+        }
+        
+        // Game objects
+        let bullets = [];
+        let enemies = [];
+        let items = [];
+        let trees = [];
+        let houses = [];
+        let deadBodies = [];
+        
+        // Safe zone variables
+        let safeZone = {
+            x: worldSize / 2,
+            y: worldSize / 2,
+            radius: worldSize / 2,
+            nextRadius: worldSize / 3,
+            shrinkTime: 120, // seconds
+            damagePerSecond: 1,
+            shrinking: false,
+            timeTillShrink: 120 // seconds
+        };
+        
+        // Input handling
+        let keys = {};
+        let mouseX = 0;
+        let mouseY = 0;
+        let mouseDown = false;
+        
+        // Mobile controls
+        let joystickActive = false;
+        let joystickX = 0;
+        let joystickY = 0;
+        let fireButtonActive = false;
+        
+        // Sound effects
+        const sounds = {
+            gunshot: new Audio('https://cdn.jsdelivr.net/gh/genifyai/assets/sounds/gunshot.mp3'),
+            reload: new Audio('https://cdn.jsdelivr.net/gh/genifyai/assets/sounds/reload.mp3'),
+            hitmarker: new Audio('https://cdn.jsdelivr.net/gh/genifyai/assets/sounds/hitmarker.mp3'),
+            pickup: new Audio('https://cdn.jsdelivr.net/gh/genifyai/assets/sounds/pickup.mp3'),
+            zoneWarning: new Audio('https://cdn.jsdelivr.net/gh/genifyai/assets/sounds/zone_warning.mp3')
+        };
+        
+        // Mute all sounds initially and load them
+        Object.values(sounds).forEach(sound => {
+            sound.volume = 0.3;
+            sound.load();
+        });
+        
+        // Game initialization
+        function initGame() {
+            // Reset game state
+            gameState = 'playing';
+            gameTime = 0;
+            bullets = [];
+            enemies = [];
+            items = [];
+            trees = [];
+            houses = [];
+            deadBodies = [];
+            
+            // Reset player
+            player = {
+                x: Math.random() * worldSize,
+                y: Math.random() * worldSize,
+                width: 40,
+                height: 40,
+                speed: 4,
+                health: 100,
+                armor: 0,
+                kills: 0,
+                direction: 0,
+                weapon: 'fist',
+                ammo: {
+                    pistol: 0,
+                    rifle: 0
+                },
+                currentAmmo: {
+                    pistol: 0,
+                    rifle: 0
+                },
+                reloading: false,
+                lastShot: 0
+            };
+            
+            // Reset safe zone
+            safeZone = {
+                x: worldSize / 2,
+                y: worldSize / 2,
+                radius: worldSize / 2,
+                nextRadius: worldSize / 3,
+                shrinkTime: 120,
+                damagePerSecond: 1,
+                shrinking: false,
+                timeTillShrink: 120
+            };
+            
+            // Generate trees
+            for (let i = 0; i < 300; i++) {
+                trees.push({
+                    x: Math.random() * worldSize,
+                    y: Math.random() * worldSize,
+                    radius: 20 + Math.random() * 20
+                });
+            }
+            
+            // Generate houses
+            for (let i = 0; i < 50; i++) {
+                houses.push({
+                    x: Math.random() * worldSize,
+                    y: Math.random() * worldSize,
+                    width: 100 + Math.random() * 100,
+                    height: 100 + Math.random() * 100
+                });
+            }
+            
+            // Generate enemies
+            for (let i = 0; i < 19; i++) { // Total 20 players including user
+                let enemyX, enemyY;
+                let validPosition = false;
+                
+                // Find valid position away from player
+                while (!validPosition) {
+                    enemyX = Math.random() * worldSize;
+                    enemyY = Math.random() * worldSize;
+                    
+                    const distance = Math.sqrt(Math.pow(enemyX - player.x, 2) + Math.pow(enemyY - player.y, 2));
+                    if (distance > 500) { // Must be at least 500px away from player
+                        validPosition = true;
+                    }
+                }
+                
+                enemies.push({
+                    x: enemyX,
+                    y: enemyY,
+                    width: 40,
+                    height: 40,
+                    speed: 3 + Math.random(),
+                    health: 100,
+                    armor: Math.random() > 0.7 ? Math.floor(Math.random() * 50) : 0,
+                    direction: Math.random() * Math.PI * 2,
+                    weapon: Math.random() > 0.8 ? 'rifle' : (Math.random() > 0.5 ? 'pistol' : 'fist'),
+                    lastShot: 0,
+                    moveTarget: { x: enemyX, y: enemyY },
+                    aggroRange: 400 + Math.random() * 300,
+                    state: 'idle', // idle, patrolling, chasing, attacking
+                    stateTime: 0,
+                    id: i + 1
+                });
+            }
+            
+            // Generate initial items
+            generateItems(100);
+            
+            // Update UI
+            updateUI();
+            
+            // Start game loop
+            requestAnimationFrame(gameLoop);
+            
+            // Show notification
+            showNotification('গেম শুরু হয়েছে! সতর্ক থাকুন!', 3000);
+        }
+        
+        // Generate items in the world
+        function generateItems(count) {
+            const itemTypes = [
+                { type: 'health', chance: 0.3 },
+                { type: 'armor', chance: 0.2 },
+                { type: 'pistolAmmo', chance: 0.2 },
+                { type: 'rifleAmmo', chance: 0.15 },
+                { type: 'pistol', chance: 0.1 },
+                { type: 'rifle', chance: 0.05 }
+            ];
+            
+            for (let i = 0; i < count; i++) {
+                // Randomly place items near houses with higher probability
+                let itemX, itemY;
+                const nearHouse = Math.random() > 0.3;
+                
+                if (nearHouse && houses.length > 0) {
+                    const house = houses[Math.floor(Math.random() * houses.length)];
+                    const padding = 50;
+                    itemX = house.x + Math.random() * (house.width + padding * 2) - padding;
+                    itemY = house.y + Math.random() * (house.height + padding * 2) - padding;
+                } else {
+                    itemX = Math.random() * worldSize;
+                    itemY = Math.random() * worldSize;
+                }
+                
+                // Choose item type based on chances
+                const rand = Math.random();
+                let itemType;
+                let cumulative = 0;
+                
+                for (const item of itemTypes) {
+                    cumulative += item.chance;
+                    if (rand <= cumulative) {
+                        itemType = item.type;
+                        break;
+                    }
+                }
+                
+                items.push({
+                    x: itemX,
+                    y: itemY,
+                    type: itemType,
+                    width: 20,
+                    height: 20
+                });
+            }
+        }
+        
+        // Main game loop
+        function gameLoop(timestamp) {
+            if (gameState !== 'playing') return;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Update game time
+            const deltaTime = 1 / 60; // Assume 60fps
+            gameTime += deltaTime;
+            
+            // Update safe zone
+            updateSafeZone(deltaTime);
+            
+            // Handle player input
+            handleInput(deltaTime);
+            
+            // Update entities
+            updatePlayer(deltaTime);
+            updateEnemies(deltaTime);
+            updateBullets(deltaTime);
+            
+            // Update camera
+            updateCamera();
+            
+            // Render world
+            renderWorld();
+            
+            // Update UI
+            updateUI();
+            
+            // Check win condition
+            if (enemies.length === 0 && gameState === 'playing') {
+                showNotification('উইনার উইনার চিকেন ডিনার!', 5000);
+                setTimeout(() => {
+                    gameOver(true);
+                }, 5000);
+            }
+            
+            // Continue game loop
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Handle player input
+        function handleInput(deltaTime) {
+            // Keyboard movement
+            let moveX = 0;
+            let moveY = 0;
+            
+            if (keys['w'] || keys['ArrowUp']) moveY -= 1;
+            if (keys['s'] || keys['ArrowDown']) moveY += 1;
+            if (keys['a'] || keys['ArrowLeft']) moveX -= 1;
+            if (keys['d'] || keys['ArrowRight']) moveX += 1;
+            
+            // Joystick movement (mobile)
+            if (joystickActive) {
+                moveX = joystickX;
+                moveY = joystickY;
+            }
+            
+            // Normalize movement vector
+            if (moveX !== 0 || moveY !== 0) {
+                const length = Math.sqrt(moveX * moveX + moveY * moveY);
+                moveX /= length;
+                moveY /= length;
+                
+                // Apply player speed
+                player.x += moveX * player.speed * deltaTime * 60;
+                player.y += moveY * player.speed * deltaTime * 60;
+                
+                // Keep player within world boundaries
+                player.x = Math.max(0, Math.min(player.x, worldSize));
+                player.y = Math.max(0, Math.min(player.y, worldSize));
+            }
+            
+            // Update player direction (based on mouse/touch aim)
+            if (!joystickActive) {
+                // Mouse aim
+                const screenPos = worldToScreen(player.x, player.y);
+                player.direction = Math.atan2(mouseY - screenPos.y, mouseX - screenPos.x);
+            }
+            
+            // Handle shooting
+            if ((mouseDown || fireButtonActive) && !player.reloading) {
+                const currentTime = performance.now();
+                const weaponConfig = weapons[player.weapon];
+                
+                if (currentTime - player.lastShot > weaponConfig.fireRate) {
+                    if (player.weapon === 'fist' || player.currentAmmo[player.weapon] > 0) {
+                        shoot(player);
+                        player.lastShot = currentTime;
+                        
+                        // Decrease ammo if not using fist
+                        if (player.weapon !== 'fist') {
+                            player.currentAmmo[player.weapon]--;
+                        }
+                    } else {
+                        // Auto reload when empty
+                        reload();
+                    }
+                }
+            }
+            
+            // Handle weapon switching
+            if (keys['1']) switchWeapon('fist');
+            if (keys['2']) switchWeapon('pistol');
+            if (keys['3']) switchWeapon('rifle');
+            
+            // Handle reload
+            if (keys['r']) reload();
+            
+            // Check collision with items
+            for (let i = items.length - 1; i >= 0; i--) {
+                const item = items[i];
+                if (checkCollision(player, item)) {
+                    pickupItem(item);
+                    items.splice(i, 1);
+                }
+            }
+            
+            // Check collision with houses and trees
+            checkEnvironmentCollision();
+        }
+        
+        // Update player state
+        function updatePlayer(deltaTime) {
+            // Handle reload timer
+            if (player.reloading) {
+                const currentTime = performance.now();
+                const weaponConfig = weapons[player.weapon];
+                
+                if (currentTime - player.lastShot > weaponConfig.reloadTime) {
+                    player.reloading = false;
+                    
+                    // Reload ammo
+                    const maxReload = Math.min(player.ammo[player.weapon], weaponConfig.ammoCapacity);
+                    player.currentAmmo[player.weapon] = maxReload;
+                    player.ammo[player.weapon] -= maxReload;
+                    
+                    showNotification('রিলোড সম্পন্ন!', 1000);
+                }
+            }
+            
+            // Check if player is outside safe zone
+            const distToCenter = Math.sqrt(Math.pow(player.x - safeZone.x, 2) + Math.pow(player.y - safeZone.y, 2));
+            if (distToCenter > safeZone.radius) {
+                player.health -= safeZone.damagePerSecond * deltaTime;
+                
+                // Show damage indicator
+                const damageIndicator = document.getElementById('damageIndicator');
+                damageIndicator.style.display = 'block';
+                damageIndicator.style.borderWidth = '5px';
+                
+                setTimeout(() => {
+                    if (damageIndicator.style.borderWidth === '5px') {
+                        damageIndicator.style.display = 'none';
+                    }
+                }, 200);
+            }
+            
+            // Check if player is dead
+            if (player.health <= 0) {
+                gameOver(false);
+            }
+        }
+        
+        // Update enemy AI and states
+        function updateEnemies(deltaTime) {
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                
+                // Check if enemy is outside safe zone
+                const distToCenter = Math.sqrt(Math.pow(enemy.x - safeZone.x, 2) + Math.pow(enemy.y - safeZone.y, 2));
+                if (distToCenter > safeZone.radius) {
+                    enemy.health -= safeZone.damagePerSecond * deltaTime;
+                }
+                
+                // Check if enemy is dead
+                if (enemy.health <= 0) {
+                    // Create a dead body
+                    deadBodies.push({
+                        x: enemy.x,
+                        y: enemy.y,
+                        width: enemy.width,
+                        height: enemy.height,
+                        direction: enemy.direction,
+                        time: gameTime
+                    });
+                    
+                    // Drop loot
+                    dropEnemyLoot(enemy);
+                    
+                    // Remove enemy
+                    enemies.splice(i, 1);
+                    continue;
+                }
+                
+                // Update enemy state and behavior
+                updateEnemyAI(enemy, deltaTime);
+                
+                // Handle enemy movement
+                moveEnemy(enemy, deltaTime);
+                
+                // Check collision with houses and trees
+                checkEnemyEnvironmentCollision(enemy);
+                
+                // Handle enemy shooting
+                if (enemy.state === 'attacking') {
+                    const currentTime = performance.now();
+                    const weaponConfig = weapons[enemy.weapon];
+                    
+                    if (currentTime - enemy.lastShot > weaponConfig.fireRate * 1.5) {  // Enemies shoot slightly slower than player
+                        shoot(enemy);
+                        enemy.lastShot = currentTime;
+                    }
+                }
+            }
+        }
+        
+        // Update enemy AI state and behavior
+        function updateEnemyAI(enemy, deltaTime) {
+            // Increment state timer
+            enemy.stateTime += deltaTime;
+            
+            // Distance to player
+            const distToPlayer = Math.sqrt(Math.pow(enemy.x - player.x, 2) + Math.pow(enemy.y - player.y, 2));
+            
+            // Enemy can see player if close enough and no obstacles in between
+            const canSeePlayer = distToPlayer < enemy.aggroRange && !hasObstacleBetween(enemy, player);
+            
+            // State transitions
+            switch (enemy.state) {
+                case 'idle':
+                    if (canSeePlayer) {
+                        enemy.state = 'chasing';
+                        enemy.stateTime = 0;
+                    } else if (enemy.stateTime > 2 + Math.random() * 2) {
+                        enemy.state = 'patrolling';
+                        enemy.stateTime = 0;
+                        
+                        // Set new patrol target
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = 100 + Math.random() * 200;
+                        enemy.moveTarget = {
+                            x: enemy.x + Math.cos(angle) * distance,
+                            y: enemy.y + Math.sin(angle) * distance
+                        };
+                        
+                        // Make sure target is within safe zone
+                        const distToSafeZone = Math.sqrt(Math.pow(enemy.moveTarget.x - safeZone.x, 2) + 
+                                                        Math.pow(enemy.moveTarget.y - safeZone.y, 2));
+                        if (distToSafeZone > safeZone.radius * 0.8) {
+                            // Move towards safe zone center instead
+                            const angle = Math.atan2(safeZone.y - enemy.y, safeZone.x - enemy.x);
+                            enemy.moveTarget = {
+                                x: enemy.x + Math.cos(angle) * distance,
+                                y: enemy.y + Math.sin(angle) * distance
+                            };
+                        }
+                    }
+                    break;
+                    
+                case 'patrolling':
+                    if (canSeePlayer) {
+                        enemy.state = 'chasing';
+                        enemy.stateTime = 0;
+                    } else {
+                        // Check if reached target
+                        const distToTarget = Math.sqrt(Math.pow(enemy.x - enemy.moveTarget.x, 2) + 
+                                                    Math.pow(enemy.y - enemy.moveTarget.y, 2));
+                        if (distToTarget < 10) {
+                            enemy.state = 'idle';
+                            enemy.stateTime = 0;
+                        }
+                    }
+                    break;
+                    
+                case 'chasing':
+                    if (!canSeePlayer && enemy.stateTime > 5) {
+                        enemy.state = 'idle';
+                        enemy.stateTime = 0;
+                    } else {
+                        // Update target to player position
+                        enemy.moveTarget = { x: player.x, y: player.y };
+                        
+                        // Check if close enough to attack
+                        if (distToPlayer < 300 && enemy.weapon !== 'fist') {
+                            enemy.state = 'attacking';
+                            enemy.stateTime = 0;
+                        } else if (distToPlayer < 50) {
+                            enemy.state = 'attacking';
+                            enemy.stateTime = 0;
+                        }
+                    }
+                    break;
+                    
+                case 'attacking':
+                    if (!canSeePlayer) {
+                        enemy.state = 'chasing';
+                        enemy.stateTime = 0;
+                    } else {
+                        // Face player
+                        enemy.direction = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+                        
+                        // If player is too far, chase again
+                        if ((enemy.weapon !== 'fist' && distToPlayer > 350) || 
+                            (enemy.weapon === 'fist' && distToPlayer > 60)) {
+                            enemy.state = 'chasing';
+                            enemy.stateTime = 0;
+                        }
+                        
+                        // Stop moving when attacking with ranged weapons
+                        if (enemy.weapon !== 'fist' && distToPlayer < 200) {
+                            enemy.moveTarget = { x: enemy.x, y: enemy.y };
+                        } else {
+                            enemy.moveTarget = { x: player.x, y: player.y };
+                        }
+                    }
+                    break;
+            }
+            
+            // Special behavior when safe zone is shrinking: prioritize moving to safe zone
+            if (safeZone.shrinking) {
+                const distToSafeZone = Math.sqrt(Math.pow(enemy.x - safeZone.x, 2) + 
+                                              Math.pow(enemy.y - safeZone.y, 2));
+                
+                if (distToSafeZone > safeZone.nextRadius * 0.9) {
+                    // Move towards safe zone center
+                    const angle = Math.atan2(safeZone.y - enemy.y, safeZone.x - enemy.x);
+                    const distance = distToSafeZone * 0.8;
+                    enemy.moveTarget = {
+                        x: enemy.x + Math.cos(angle) * distance,
+                        y: enemy.y + Math.sin(angle) * distance
+                    };
+                    
+                    // Override other states only if not attacking player
+                    if (enemy.state !== 'attacking') {
+                        enemy.state = 'patrolling';
+                    }
+                }
+            }
+        }
+        
+        // Move enemy based on its state and target
+        function moveEnemy(enemy, deltaTime) {
+            // Calculate direction to move target
+            const angle = Math.atan2(enemy.moveTarget.y - enemy.y, enemy.moveTarget.x - enemy.x);
+            
+            // Update enemy direction if not attacking
+            if (enemy.state !== 'attacking') {
+                enemy.direction = angle;
+            }
+            
+            // Move enemy towards target
+            if (enemy.state !== 'idle') {
+                enemy.x += Math.cos(angle) * enemy.speed * deltaTime * 60;
+                enemy.y += Math.sin(angle) * enemy.speed * deltaTime * 60;
+                
+                // Keep enemy within world boundaries
+                enemy.x = Math.max(0, Math.min(enemy.x, worldSize));
+                enemy.y = Math.max(0, Math.min(enemy.y, worldSize));
+            }
+        }
+        
+        // Update bullets
+        function updateBullets(deltaTime) {
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                
+                // Move bullet
+                bullet.x += Math.cos(bullet.direction) * bullet.speed * deltaTime * 60;
+                bullet.y += Math.sin(bullet.direction) * bullet.speed * deltaTime * 60;
+                
+                // Check bullet lifetime
+                bullet.life -= deltaTime;
+                if (bullet.life <= 0) {
+                    bullets.splice(i, 1);
+                    continue;
+                }
+                
+                // Check collision with player
+                if (!bullet.fromPlayer && checkCollision(bullet, player)) {
+                    // Apply damage to player
+                    const damage = calculateDamage(bullet.damage, player.armor);
+                    player.health -= damage;
+                    
+                    // Show damage indicator
+                    const damageIndicator = document.getElementById('damageIndicator');
+                    damageIndicator.style.display = 'block';
+                    damageIndicator.style.borderWidth = '5px';
+                    
+                    setTimeout(() => {
+                        damageIndicator.style.display = 'none';
+                    }, 200);
+                    
+                    // Remove bullet
+                    bullets.splice(i, 1);
+                    continue;
+                }
+                
+                // Check collision with enemies
+                for (let j = 0; j < enemies.length; j++) {
+                    const enemy = enemies[j];
+                    if (bullet.fromPlayer && checkCollision(bullet, enemy)) {
+                        // Play hit sound
+                        playSoundEffect('hitmarker');
+                        
+                        // Apply damage to enemy
+                        const damage = calculateDamage(bullet.damage, enemy.armor);
+                        enemy.health -= damage;
+                        
+                        // If enemy dies, give player a kill
+                        if (enemy.health <= 0) {
+                            player.kills++;
+                            showNotification(`খতম #${enemy.id}!`, 1500);
+                        }
+                        
+                        // Remove bullet
+                        bullets.splice(i, 1);
+                        break;
+                    }
+                }
+                
+                // Check collision with environment
+                if (checkBulletEnvironmentCollision(bullet)) {
+                    bullets.splice(i, 1);
+                    continue;
+                }
+            }
+        }
+        
+        // Check if bullet collides with environment
+        function checkBulletEnvironmentCollision(bullet) {
+            // Check collision with houses
+            for (let i = 0; i < houses.length; i++) {
+                const house = houses[i];
+                if (bullet.x >= house.x && bullet.x <= house.x + house.width &&
+                    bullet.y >= house.y && bullet.y <= house.y + house.height) {
+                    return true;
+                }
+            }
+            
+            // Check collision with trees
+            for (let i = 0; i < trees.length; i++) {
+                const tree = trees[i];
+                const distance = Math.sqrt(Math.pow(bullet.x - tree.x, 2) + Math.pow(bullet.y - tree.y, 2));
+                if (distance <= tree.radius) {
+                    return true;
+                }
+            }
+            
+            // Check if bullet is outside world
+            if (bullet.x < 0 || bullet.x > worldSize || bullet.y < 0 || bullet.y > worldSize) {
+                return true;
+            }
+            
+            return false;
+        }
+        
+        // Update safe zone
+        function updateSafeZone(deltaTime) {
+            if (!safeZone.shrinking) {
+                // Count down to next shrink
+                safeZone.timeTillShrink -= deltaTime;
+                
+                if (safeZone.timeTillShrink <= 0) {
+                    // Start shrinking
+                    safeZone.shrinking = true;
+                    safeZone.timeTillShrink = safeZone.shrinkTime;
+                    
+                    // Play warning sound
+                    playSoundEffect('zoneWarning');
+                    
+                    // Show notification
+                    showNotification('সতর্কতা! সেফ জোন সংকুচিত হচ্ছে!', 3000);
+                }
+            } else {
+                // Shrink the zone
+                const shrinkRate = (safeZone.radius - safeZone.nextRadius) / safeZone.shrinkTime;
+                safeZone.radius -= shrinkRate * deltaTime;
+                
+                if (safeZone.radius <= safeZone.nextRadius) {
+                    // Finish shrinking
+                    safeZone.radius = safeZone.nextRadius;
+                    safeZone.shrinking = false;
+                    
+                    // Set up next shrink
+                    safeZone.nextRadius = Math.max(100, safeZone.radius * 0.6);
+                    safeZone.timeTillShrink = 120 + Math.random() * 60; // 2-3 minutes till next shrink
+                    safeZone.damagePerSecond += 1; // Damage increases each round
+                }
+            }
+        }
+        
+        // Render the game world
+        function renderWorld() {
+            // Set background pattern
+            ctx.fillStyle = '#4A752C';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            
+            const gridSize = 100;
+            const startX = Math.floor(viewportX / gridSize) * gridSize - viewportX;
+            const startY = Math.floor(viewportY / gridSize) * gridSize - viewportY;
+            
+            for (let x = startX; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = startY; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Draw houses
+            ctx.fillStyle = '#8B4513'; // Brown
+            for (const house of houses) {
+                const screenPos = worldToScreen(house.x, house.y);
+                if (isOnScreen(house)) {
+                    ctx.fillRect(screenPos.x, screenPos.y, house.width, house.height);
+                    
+                    // Draw house windows
+                    ctx.fillStyle = '#87CEEB'; // Sky blue
+                    ctx.fillRect(screenPos.x + house.width * 0.2, screenPos.y + house.height * 0.2, house.width * 0.2, house.height * 0.2);
+                    ctx.fillRect(screenPos.x + house.width * 0.6, screenPos.y + house.height * 0.2, house.width * 0.2, house.height * 0.2);
+                    ctx.fillRect(screenPos.x + house.width * 0.2, screenPos.y + house.height * 0.6, house.width * 0.2, house.height * 0.2);
+                    ctx.fillRect(screenPos.x + house.width * 0.6, screenPos.y + house.height * 0.6, house.width * 0.2, house.height * 0.2);
+                    
+                    // Draw door
+                    ctx.fillStyle = '#5C4033'; // Darker brown
+                    ctx.fillRect(screenPos.x + house.width * 0.4, screenPos.y + house.height * 0.7, house.width * 0.2, house.height * 0.3);
+                    
+                    ctx.fillStyle = '#8B4513'; // Reset color
+                }
+            }
+            
+            // Draw trees
+            for (const tree of trees) {
+                const screenPos = worldToScreen(tree.x, tree.y);
+                if (isOnScreen({x: tree.x - tree.radius, y: tree.y - tree.radius, width: tree.radius * 2, height: tree.radius * 2})) {
+                    // Draw tree trunk
+                    ctx.fillStyle = '#8B4513'; // Brown
+                    ctx.beginPath();
+                    ctx.arc(screenPos.x, screenPos.y, tree.radius * 0.3, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Draw tree leaves
+                    ctx.fillStyle = '#2E8B57'; // Sea green
+                    ctx.beginPath();
+                    ctx.arc(screenPos.x, screenPos.y, tree.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Draw items
+            for (const item of items) {
+                const screenPos = worldToScreen(item.x, item.y);
+                if (isOnScreen(item)) {
+                    switch(item.type) {
+                        case 'health':
+                            ctx.fillStyle = '#ff0000'; // Red
+                            break;
+                        case 'armor':
+                            ctx.fillStyle = '#0095ff'; // Blue
+                            break;
+                        case 'pistolAmmo':
+                            ctx.fillStyle = '#ffff00'; // Yellow
+                            break;
+                        case 'rifleAmmo':
+                            ctx.fillStyle = '#ff9900'; // Orange
+                            break;
+                        case 'pistol':
+                            ctx.fillStyle = '#aaaaaa'; // Light gray
+                            break;
+                        case 'rifle':
+                            ctx.fillStyle = '#444444'; // Dark gray
+                            break;
+                    }
+                    
+                    ctx.fillRect(screenPos.x - item.width/2, screenPos.y - item.height/2, item.width, item.height);
+                    
+                    // Draw glow effect for better visibility
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                    ctx.beginPath();
+                    ctx.arc(screenPos.x, screenPos.y, Math.sin(gameTime * 3) * 5 + 15, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Draw dead bodies
+            ctx.fillStyle = '#333333';
+            for (const body of deadBodies) {
+                const screenPos = worldToScreen(body.x, body.y);
+                if (isOnScreen(body)) {
+                    // Draw body as X
+                    ctx.strokeStyle = '#333333';
+                    ctx.lineWidth = 2;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(screenPos.x - 15, screenPos.y - 15);
+                    ctx.lineTo(screenPos.x + 15, screenPos.y + 15);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(screenPos.x + 15, screenPos.y - 15);
+                    ctx.lineTo(screenPos.x - 15, screenPos.y + 15);
+                    ctx.stroke();
+                    
+                    ctx.lineWidth = 1;
+                }
+            }
+            
+            // Draw safe zone
+            const safeZonePos = worldToScreen(safeZone.x, safeZone.y);
+            ctx.strokeStyle = 'rgba(0, 150, 255, 0.8)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(safeZonePos.x, safeZonePos.y, safeZone.radius, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Draw next safe zone (if shrinking)
+            if (safeZone.shrinking) {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(safeZonePos.x, safeZonePos.y, safeZone.nextRadius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Draw player
+            const playerScreenPos = worldToScreen(player.x, player.y);
+            
+            // Draw player body
+            ctx.fillStyle = '#0000ff'; // Blue
+            ctx.beginPath();
+            ctx.arc(playerScreenPos.x, playerScreenPos.y, player.width / 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw player direction indicator
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(playerScreenPos.x, playerScreenPos.y);
+            ctx.lineTo(
+                playerScreenPos.x + Math.cos(player.direction) * 30,
+                playerScreenPos.y + Math.sin(player.direction) * 30
+            );
+            ctx.stroke();
+            
+            // Draw enemies
+            for (const enemy of enemies) {
+                const enemyScreenPos = worldToScreen(enemy.x, enemy.y);
+                if (isOnScreen(enemy)) {
+                    // Draw enemy body
+                    ctx.fillStyle = '#ff0000'; // Red
+                    ctx.beginPath();
+                    ctx.arc(enemyScreenPos.x, enemyScreenPos.y, enemy.width / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Draw enemy direction indicator
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(enemyScreenPos.x, enemyScreenPos.y);
+                    ctx.lineTo(
+                        enemyScreenPos.x + Math.cos(enemy.direction) * 25,
+                        enemyScreenPos.y + Math.sin(enemy.direction) * 25
+                    );
+                    ctx.stroke();
+                    
+                    // Draw enemy health bar
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                    ctx.fillRect(enemyScreenPos.x - 20, enemyScreenPos.y - 30, 40, 5);
+                    
+                    ctx.fillStyle = '#ff0000';
+                    ctx.fillRect(enemyScreenPos.x - 20, enemyScreenPos.y - 30, 40 * (enemy.health / 100), 5);
+                }
+            }
+            
+            // Draw bullets
+            ctx.fillStyle = '#ffff00'; // Yellow
+            for (const bullet of bullets) {
+                const bulletScreenPos = worldToScreen(bullet.x, bullet.y);
+                if (bulletScreenPos.x >= 0 && bulletScreenPos.x <= canvas.width &&
+                    bulletScreenPos.y >= 0 && bulletScreenPos.y <= canvas.height) {
+                    ctx.beginPath();
+                    ctx.arc(bulletScreenPos.x, bulletScreenPos.y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Draw minimap
+            updateMinimap();
+        }
+        
+        // Check if entity is on screen
+        function isOnScreen(entity) {
+            return entity.x + entity.width >= viewportX && 
+                   entity.x <= viewportX + canvas.width &&
+                   entity.y + entity.height >= viewportY && 
+                   entity.y <= viewportY + canvas.height;
+        }
+        
+        // Update minimap
+        function updateMinimap() {
+            const minimap = document.getElementById('minimap');
+            const minimapSize = minimap.clientWidth;
+            
+            // Clear minimap by setting a border
+            minimap.style.border = '2px solid rgba(0, 0, 0, 0.5)';
+            minimap.style.backgroundColor = 'rgba(74, 117, 44, 0.5)';
+            
+            // Create elements for player and zone
+            const playerDot = document.createElement('div');
+            playerDot.style.position = 'absolute';
+            playerDot.style.width = '8px';
+            playerDot.style.height = '8px';
+            playerDot.style.borderRadius = '50%';
+            playerDot.style.backgroundColor = '#0000ff';
+            playerDot.style.transform = 'translate(-50%, -50%)';
+            
+            const safeZoneCircle = document.createElement('div');
+            safeZoneCircle.style.position = 'absolute';
+            safeZoneCircle.style.border = '2px solid rgba(0, 150, 255, 0.8)';
+            safeZoneCircle.style.borderRadius = '50%';
+            safeZoneCircle.style.transform = 'translate(-50%, -50%)';
+            
+            // Position elements on minimap
+            const playerX = (player.x / worldSize) * minimapSize;
+            const playerY = (player.y / worldSize) * minimapSize;
+            
+            const safeZoneX = (safeZone.x / worldSize) * minimapSize;
+            const safeZoneY = (safeZone.y / worldSize) * minimapSize;
+            const safeZoneRadius = (safeZone.radius / worldSize) * minimapSize;
+            
+            playerDot.style.left = `${playerX}px`;
+            playerDot.style.top = `${playerY}px`;
+            
+            safeZoneCircle.style.left = `${safeZoneX}px`;
+            safeZoneCircle.style.top = `${safeZoneY}px`;
+            safeZoneCircle.style.width = `${safeZoneRadius * 2}px`;
+            safeZoneCircle.style.height = `${safeZoneRadius * 2}px`;
+            
+            // Clear previous elements
+            minimap.innerHTML = '';
+            
+            // Add enemy dots to minimap
+            for (const enemy of enemies) {
+                const enemyDot = document.createElement('div');
+                enemyDot.style.position = 'absolute';
+                enemyDot.style.width = '4px';
+                enemyDot.style.height = '4px';
+                enemyDot.style.borderRadius = '50%';
+                enemyDot.style.backgroundColor = '#ff0000';
+                enemyDot.style.transform = 'translate(-50%, -50%)';
+                
+                const enemyX = (enemy.x / worldSize) * minimapSize;
+                const enemyY = (enemy.y / worldSize) * minimapSize;
+                
+                enemyDot.style.left = `${enemyX}px`;
+                enemyDot.style.top = `${enemyY}px`;
+                
+                minimap.appendChild(enemyDot);
+            }
+            
+            // Add elements to minimap
+            minimap.appendChild(safeZoneCircle);
+            minimap.appendChild(playerDot);
+        }
+        
+        // Update UI elements
+        function updateUI() {
+            // Update health bar
+            const healthFill = document.getElementById('healthFill');
+            healthFill.style.width = `${player.health}%`;
+            
+            // Update armor bar
+            const armorFill = document.getElementById('armorFill');
+            armorFill.style.width = `${player.armor}%`;
+            
+            // Update kill count
+            const killCount = document.getElementById('killCount');
+            killCount.textContent = `কিল: ${player.kills}`;
+            
+            // Update player count
+            const playerCount = document.getElementById('playerCount');
+            playerCount.textContent = `বাকি: ${enemies.length + 1}`;
+            
+            // Update zone timer
+            const zoneTimer = document.getElementById('zoneTimer');
+            if (safeZone.shrinking) {
+                zoneTimer.textContent = `জোন সংকুচিত হচ্ছে!`;
+                zoneTimer.style.color = '#ff0000';
+            } else {
+                const minutes = Math.floor(safeZone.timeTillShrink / 60);
+                const seconds = Math.floor(safeZone.timeTillShrink % 60);
+                zoneTimer.textContent = `জোন: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                zoneTimer.style.color = 'white';
+            }
+            
+            // Update weapon selection
+            const weapons = document.querySelectorAll('.weapon');
+            weapons.forEach(weaponEl => {
+                if (weaponEl.getAttribute('data-weapon') === player.weapon) {
+                    weaponEl.classList.add('active');
+                } else {
+                    weaponEl.classList.remove('active');
+                }
+            });
+            
+            // Update ammo count
+            const ammoCount = document.getElementById('ammoCount');
+            if (player.weapon === 'fist') {
+                ammoCount.textContent = '';
+            } else {
+                ammoCount.textContent = `গুলি: ${player.currentAmmo[player.weapon]} / ${player.ammo[player.weapon]}`;
+            }
+        }
+        
+        // Handle shooting
+        function shoot(shooter) {
+            const weaponConfig = weapons[shooter.weapon];
+            
+            // Play gunshot sound
+            if (shooter === player) {
+                playSoundEffect('gunshot');
+            }
+            
+            // Create bullets with spread
+            const spread = weaponConfig.spread;
+            const bulletSpeed = 15;
+            const baseDirection = shooter.direction;
+            
+            // Add random spread
+            const bulletDirection = baseDirection + (Math.random() - 0.5) * spread;
+            
+            bullets.push({
+                x: shooter.x + Math.cos(shooter.direction) * 30,
+                y: shooter.y + Math.sin(shooter.direction) * 30,
+                direction: bulletDirection,
+                speed: bulletSpeed,
+                damage: weaponConfig.damage,
+                life: weaponConfig.range / bulletSpeed / 60,
+                fromPlayer: shooter === player
+            });
+        }
+        
+        // Handle reload
+        function reload() {
+            if (player.weapon === 'fist' || player.reloading) return;
+            
+            const weaponConfig = weapons[player.weapon];
+            
+            if (player.ammo[player.weapon] > 0 && player.currentAmmo[player.weapon] < weaponConfig.ammoCapacity) {
+                player.reloading = true;
+                player.lastShot = performance.now();
+                
+                // Play reload sound
+                playSoundEffect('reload');
+                
+                showNotification('রিলোড করা হচ্ছে...', 1000);
+            }
+        }
+        
+        // Switch weapon
+        function switchWeapon(weapon) {
+            if (weapon === player.weapon) return;
+            
+            if (weapon === 'fist' || (weapon === 'pistol' && hasPistol()) || (weapon === 'rifle' && hasRifle())) {
+                player.weapon = weapon;
+                showNotification(`${getWeaponName(weapon)} সক্রিয় করা হয়েছে`, 1000);
+            }
+        }
+        
+        // Check if player has weapon
+        function hasPistol() {
+            return player.ammo.pistol > 0 || player.currentAmmo.pistol > 0;
+        }
+        
+        function hasRifle() {
+            return player.ammo.rifle > 0 || player.currentAmmo.rifle > 0;
+        }
+        
+        // Get weapon name in Bengali
+        function getWeaponName(weapon) {
+            switch(weapon) {
+                case 'fist': return 'মুষ্টি';
+                case 'pistol': return 'পিস্তল';
+                case 'rifle': return 'রাইফেল';
+                default: return weapon;
+            }
+        }
+        
+        // Pickup item
+        function pickupItem(item) {
+            playSoundEffect('pickup');
+            
+            switch(item.type) {
+                case 'health':
+                    player.health = Math.min(100, player.health + 25);
+                    showNotification('স্বাস্থ্য +25', 1000);
+                    break;
+                case 'armor':
+                    player.armor = Math.min(100, player.armor + 25);
+                    showNotification('আর্মার +25', 1000);
+                    break;
+                case 'pistolAmmo':
+                    player.ammo.pistol += 10;
+                    showNotification('পিস্তল গুলি +10', 1000);
+                    break;
+                case 'rifleAmmo':
+                    player.ammo.rifle += 30;
+                    showNotification('রাইফেল গুলি +30', 1000);
+                    break;
+                case 'pistol':
+                    if (player.currentAmmo.pistol === 0) {
+                        player.currentAmmo.pistol = Math.min(10, player.ammo.pistol);
+                        player.ammo.pistol -= player.currentAmmo.pistol;
+                    }
+                    showNotification('পিস্তল কুড়ানো হয়েছে', 1000);
+                    break;
+                case 'rifle':
+                    if (player.currentAmmo.rifle === 0) {
+                        player.currentAmmo.rifle = Math.min(30, player.ammo.rifle);
+                        player.ammo.rifle -= player.currentAmmo.rifle;
+                    }
+                    showNotification('রাইফেল কুড়ানো হয়েছে', 1000);
+                    break;
+            }
+        }
+        
+        // Drop loot from dead enemy
+        function dropEnemyLoot(enemy) {
+            const lootTypes = [];
+            
+            // Always drop some health
+            lootTypes.push('health');
+            
+            // Drop armor if enemy had any
+            if (enemy.armor > 0) {
+                lootTypes.push('armor');
+            }
+            
+            // Drop weapon and ammo
+            if (enemy.weapon === 'pistol') {
+                lootTypes.push('pistol');
+                lootTypes.push('pistolAmmo');
+            } else if (enemy.weapon === 'rifle') {
+                lootTypes.push('rifle');
+                lootTypes.push('rifleAmmo');
+            }
+            
+            // Drop items at enemy location
+            for (let i = 0; i < lootTypes.length; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 30;
+                
+                items.push({
+                    x: enemy.x + Math.cos(angle) * distance,
+                    y: enemy.y + Math.sin(angle) * distance,
+                    type: lootTypes[i],
+                    width: 20,
+                    height: 20
+                });
+            }
+        }
+        
+        // Calculate damage after armor reduction
+        function calculateDamage(baseDamage, armor) {
+            const armorReduction = armor * 0.5 / 100; // 50% max reduction at 100 armor
+            const damage = baseDamage * (1 - armorReduction);
+            
+            // Reduce armor
+            if (armor > 0) {
+                armor = Math.max(0, armor - baseDamage * 0.5);
+            }
+            
+            return damage;
+        }
+        
+        // Check collision between two entities
+        function checkCollision(entity1, entity2) {
+            return entity1.x < entity2.x + entity2.width &&
+                   entity1.x + entity1.width > entity2.x &&
+                   entity1.y < entity2.y + entity2.height &&
+                   entity1.y + entity1.height > entity2.y;
+        }
+        
+        // Check if there's an obstacle between two entities
+        function hasObstacleBetween(entity1, entity2) {
+            // Simple ray casting from entity1 to entity2
+            const steps = 10;
+            const dx = (entity2.x - entity1.x) / steps;
+            const dy = (entity2.y - entity1.y) / steps;
+            
+            for (let i = 1; i < steps; i++) {
+                const x = entity1.x + dx * i;
+                const y = entity1.y + dy * i;
+                
+                // Check houses
+                for (const house of houses) {
+                    if (x >= house.x && x <= house.x + house.width &&
+                        y >= house.y && y <= house.y + house.height) {
+                        return true;
+                    }
+                }
+                
+                // Check trees (simplified for performance)
+                for (const tree of trees) {
+                    const distance = Math.sqrt(Math.pow(x - tree.x, 2) + Math.pow(y - tree.y, 2));
+                    if (distance <= tree.radius) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        }
+        
+        // Check collision with environment
+        function checkEnvironmentCollision() {
+            const prevX = player.x;
+            const prevY = player.y;
+            
+            // Check houses
+            for (const house of houses) {
+                if (checkCollision(player, house)) {
+                    // Push player outside the house
+                    // Determine which side of the house the player is closest to
+                    const leftDist = Math.abs(player.x - house.x);
+                    const rightDist = Math.abs(player.x - (house.x + house.width));
+                    const topDist = Math.abs(player.y - house.y);
+                    const bottomDist = Math.abs(player.y - (house.y + house.height));
+                    
+                    const minDist = Math.min(leftDist, rightDist, topDist, bottomDist);
+                    
+                    if (minDist === leftDist) {
+                        player.x = house.x - player.width;
+                    } else if (minDist === rightDist) {
+                        player.x = house.x + house.width;
+                    } else if (minDist === topDist) {
+                        player.y = house.y - player.height;
+                    } else {
+                        player.y = house.y + house.height;
+                    }
+                }
+            }
+            
+            // Check trees
+            for (const tree of trees) {
+                const distX = player.x - tree.x;
+                const distY = player.y - tree.y;
+                const distance = Math.sqrt(distX * distX + distY * distY);
+                
+                if (distance < tree.radius + player.width / 2) {
+                    // Push player outside the tree
+                    const angle = Math.atan2(distY, distX);
+                    const pushDistance = tree.radius + player.width / 2 - distance;
+                    
+                    player.x += Math.cos(angle) * pushDistance;
+                    player.y += Math.sin(angle) * pushDistance;
+                }
+            }
+            
+            // Keep player within world boundaries
+            player.x = Math.max(0, Math.min(player.x, worldSize));
+            player.y = Math.max(0, Math.min(player.y, worldSize));
+        }
+        
+        // Check enemy collision with environment
+        function checkEnemyEnvironmentCollision(enemy) {
+            // Check houses
+            for (const house of houses) {
+                if (checkCollision(enemy, house)) {
+                    // Get direction away from house center
+                    const houseCenter = {
+                        x: house.x + house.width / 2,
+                        y: house.y + house.height / 2
+                    };
+                    
+                    const angle = Math.atan2(enemy.y - houseCenter.y, enemy.x - houseCenter.x);
+                    
+                    // Move enemy outside house
+                    const diagonalLength = Math.sqrt(house.width * house.width + house.height * house.height) / 2;
+                    enemy.x = houseCenter.x + Math.cos(angle) * (diagonalLength + enemy.width);
+                    enemy.y = houseCenter.y + Math.sin(angle) * (diagonalLength + enemy.height);
+                }
+            }
+            
+            // Check trees
+            for (const tree of trees) {
+                const distX = enemy.x - tree.x;
+                const distY = enemy.y - tree.y;
+                const distance = Math.sqrt(distX * distX + distY * distY);
+                
+                if (distance < tree.radius + enemy.width / 2) {
+                    // Push enemy outside the tree
+                    const angle = Math.atan2(distY, distX);
+                    const pushDistance = tree.radius + enemy.width / 2 - distance;
+                    
+                    enemy.x += Math.cos(angle) * pushDistance;
+                    enemy.y += Math.sin(angle) * pushDistance;
+                }
+            }
+            
+            // Keep enemy within world boundaries
+            enemy.x = Math.max(0, Math.min(enemy.x, worldSize));
+            enemy.y = Math.max(0, Math.min(enemy.y, worldSize));
+        }
+        
+        // Game over handler
+        function gameOver(isWinner) {
+            gameState = 'gameover';
+            
+            // Save high score
+            saveHighScore(player.kills);
+            
+            // Show game over screen
+            const gameOverScreen = document.getElementById('gameOverScreen');
+            const finalScore = document.getElementById('finalScore');
+            
+            if (isWinner) {
+                finalScore.textContent = `আপনি জিতেছেন! কিল: ${player.kills}`;
+            } else {
+                finalScore.textContent = `আপনি হেরেছেন। কিল: ${player.kills}`;
+            }
+            
+            gameOverScreen.style.display = 'flex';
+        }
+        
+        // Save high score to local storage
+        function saveHighScore(score) {
+            let highScores = JSON.parse(localStorage.getItem('pubgHighScores') || '[]');
+            
+            highScores.push(score);
+            highScores.sort((a, b) => b - a); // Sort in descending order
+            highScores = highScores.slice(0, 5); // Keep only top 5
+            
+            localStorage.setItem('pubgHighScores', JSON.stringify(highScores));
+            
+            // Update high scores in UI
+            updateHighScores();
+        }
+        
+        // Update high scores in UI
+        function updateHighScores() {
+            const highScores = JSON.parse(localStorage.getItem('pubgHighScores') || '[]');
+            const scoreList = document.getElementById('scoreList');
+            
+            if (highScores.length === 0) {
+                scoreList.textContent = 'কোন স্কোর নেই';
+                return;
+            }
+            
+            scoreList.innerHTML = '';
+            highScores.forEach((score, index) => {
+                const scoreItem = document.createElement('div');
+                scoreItem.textContent = `${index + 1}. কিল: ${score}`;
+                scoreList.appendChild(scoreItem);
+            });
+        }
+        
+        // Show notification
+        function showNotification(message, duration) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, duration);
+        }
+        
+        // Play sound effect with error handling
+        function playSoundEffect(soundName) {
+            try {
+                if (sounds[soundName]) {
+                    // Clone the audio to allow overlapping sounds
+                    const sound = sounds[soundName].cloneNode();
+                    sound.volume = 0.3;
+                    sound.play().catch(err => {
+                        console.log('Sound play failed:', err);
+                    });
+                }
+            } catch (error) {
+                console.log('Sound error:', error);
+            }
+        }
+        
+        // Resize canvas to fit window
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        // Setup mobile controls
+        function setupMobileControls() {
+            const joystick = document.getElementById('joystick');
+            const joystickKnob = document.getElementById('joystickKnob');
+            const fireButton = document.getElementById('fireButton');
+            const reloadButton = document.getElementById('reloadButton');
+            
+            // Only show mobile controls on touch devices
+            if ('ontouchstart' in window) {
+                joystick.style.display = 'block';
+                fireButton.style.display = 'flex';
+                reloadButton.style.display = 'flex';
+                
+                // Position joystick
+                joystick.style.left = '100px';
+                joystick.style.bottom = '100px';
+                
+                // Setup joystick handlers
+                joystick.addEventListener('touchstart', handleJoystickStart);
+                joystick.addEventListener('touchmove', handleJoystickMove);
+                joystick.addEventListener('touchend', handleJoystickEnd);
+                
+                // Setup fire button
+                fireButton.addEventListener('touchstart', () => {
+                    fireButtonActive = true;
+                });
+                
+                fireButton.addEventListener('touchend', () => {
+                    fireButtonActive = false;
+                });
+                
+                // Setup reload button
+                reloadButton.addEventListener('touchstart', () => {
+                    reload();
+                });
+                
+                // Setup weapon switching
+                const weaponElements = document.querySelectorAll('.weapon');
+                weaponElements.forEach(weaponEl => {
+                    weaponEl.style.pointerEvents = 'auto';
+                    weaponEl.addEventListener('click', () => {
+                        switchWeapon(weaponEl.getAttribute('data-weapon'));
+                    });
+                });
+            }
+        }
+        
+        // Joystick handlers
+        function handleJoystickStart(e) {
+            e.preventDefault();
+            joystickActive = true;
+            
+            // Get joystick position
+            const joystickRect = document.getElementById('joystick').getBoundingClientRect();
+            const joystickCenterX = joystickRect.left + joystickRect.width / 2;
+            const joystickCenterY = joystickRect.top + joystickRect.height / 2;
+            
+            // Set joystick knob to center
+            const joystickKnob = document.getElementById('joystickKnob');
+            joystickKnob.style.left = '50%';
+            joystickKnob.style.top = '50%';
+        }
+        
+        function handleJoystickMove(e) {
+            e.preventDefault();
+            if (!joystickActive) return;
+            
+            // Get touch and joystick positions
+            const touch = e.touches[0];
+            const joystickRect = document.getElementById('joystick').getBoundingClientRect();
+            const joystickCenterX = joystickRect.left + joystickRect.width / 2;
+            const joystickCenterY = joystickRect.top + joystickRect.height / 2;
+            
+            // Calculate joystick offset
+            let offsetX = touch.clientX - joystickCenterX;
+            let offsetY = touch.clientY - joystickCenterY;
+            
+            // Limit offset to joystick radius
+            const joystickRadius = joystickRect.width / 2;
+            const distance = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
+            
+            if (distance > joystickRadius) {
+                offsetX *= joystickRadius / distance;
+                offsetY *= joystickRadius / distance;
+            }
+            
+            // Update joystick knob position
+            const joystickKnob = document.getElementById('joystickKnob');
+            joystickKnob.style.left = `calc(50% + ${offsetX}px)`;
+            joystickKnob.style.top = `calc(50% + ${offsetY}px)`;
+            
+            // Update joystick values
+            joystickX = offsetX / joystickRadius;
+            joystickY = offsetY / joystickRadius;
+            
+            // Update player direction
+            player.direction = Math.atan2(joystickY, joystickX);
+        }
+        
+        function handleJoystickEnd(e) {
+            e.preventDefault();
+            joystickActive = false;
+            
+            // Reset joystick
+            joystickX = 0;
+            joystickY = 0;
+            
+            // Reset joystick knob position
+            const joystickKnob = document.getElementById('joystickKnob');
+            joystickKnob.style.left = '50%';
+            joystickKnob.style.top = '50%';
+        }
+        
+        // Event listeners
+        window.addEventListener('resize', resizeCanvas);
+        
+        window.addEventListener('keydown', e => {
+            keys[e.key.toLowerCase()] = true;
+            
+            // Reload on R key
+            if (e.key.toLowerCase() === 'r') {
+                reload();
+            }
+        });
+        
+        window.addEventListener('keyup', e => {
+            keys[e.key.toLowerCase()] = false;
+        });
+        
+        canvas.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+        
+        canvas.addEventListener('mousedown', e => {
+            mouseDown = true;
+        });
+        
+        canvas.addEventListener('mouseup', e => {
+            mouseDown = false;
+        });
+        
+        canvas.addEventListener('touchstart', e => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            mouseX = touch.clientX;
+            mouseY = touch.clientY;
+            mouseDown = true;
+        });
+        
+        canvas.addEventListener('touchmove', e => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            mouseX = touch.clientX;
+            mouseY = touch.clientY;
+        });
+        
+        canvas.addEventListener('touchend', e => {
+            e.preventDefault();
+            mouseDown = false;
+        });
+        
+        document.getElementById('startButton').addEventListener('click', () => {
+            document.getElementById('startScreen').style.display = 'none';
+            initGame();
+        });
+        
+        document.getElementById('restartButton').addEventListener('click', () => {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            initGame();
+        });
+        
+        // Initialize
+        resizeCanvas();
+        setupMobileControls();
+        updateHighScores();
+    </script>
+</body>
+</html>
